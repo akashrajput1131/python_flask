@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+
+    environment {
+        AZURE_CREDENTIALS_ID = 'azure-service-principal'  // Jenkins credential ID (type: Azure Service Principal)
+        ACR_NAME             = 'pythonflaskacr1131'                  // Your ACR name (no domain)
+        ACR_LOGIN_SERVER     = 'pythonflaskacr1131.azurecr.io'
+        IMAGE_NAME           = 'mypythonflask'
+        IMAGE_TAG            = '1.0'
+        RESOURCE_GROUP       = 'AAR'
+        AKS_CLUSTER_NAME     = 'Python-flask-aks'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/your/repo.git', branch: 'main'
+            }
+        }
+
+        stage('Azure CLI Login') {
+            steps {
+                withCredentials([azureServicePrincipal(credentialsId: "${AZURE_CREDENTIALS_ID}", subscriptionIdVariable: 'AZ_SUBSCRIPTION_ID', clientIdVariable: 'AZ_CLIENT_ID', clientSecretVariable: 'AZ_CLIENT_SECRET', tenantIdVariable: 'AZ_TENANT_ID')]) {
+                    sh '''
+                        az login --service-principal -u $AZ_CLIENT_ID -p $AZ_CLIENT_SECRET --tenant $AZ_TENANT_ID
+                        az account set --subscription $AZ_SUBSCRIPTION_ID
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                '''
+            }
+        }
+
+        stage('Push to ACR') {
+            steps {
+                sh '''
+                    az acr login --name $ACR_NAME
+                    docker tag $IMAGE_NAME:$IMAGE_TAG $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
+                    docker push $ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Deploy to AKS') {
+            steps {
+                sh '''
+                    az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing
+                    kubectl apply -f deployment.yaml
+                    kubectl apply -f service.yaml
+                '''
+            }
+        }
+    }
+}
