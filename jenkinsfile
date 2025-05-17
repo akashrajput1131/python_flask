@@ -2,19 +2,19 @@ pipeline {
     agent any
 
     environment {
-        AZURE_CREDENTIALS_ID = 'azure-service-principal'  // Jenkins credential ID (type: Azure Service Principal)
-        ACR_NAME             = 'pythonflaskacr1131'                  // Your ACR name (no domain)
-        ACR_LOGIN_SERVER     = 'pythonflaskacr1131.azurecr.io'
-        IMAGE_NAME           = 'mypythonflask'
+        AZURE_CREDENTIALS_ID = 'azure-cli'  // Jenkins credential ID (type: Azure Service Principal)
+        ACR_NAME             = 'pythonflaskacr11'                  // Your ACR name (no domain)
+        ACR_LOGIN_SERVER     = 'pythonflaskacr11.azurecr.io'
+        IMAGE_NAME           = 'python-flask1'
         IMAGE_TAG            = '1.0'
-        RESOURCE_GROUP       = 'AAR'
-        AKS_CLUSTER_NAME     = 'Python-flask-aks'
+        RESOURCE_GROUP       = 'AR'
+        AKS_CLUSTER_NAME     = 'Python-flask-aks1'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git url: 'https://github.com/your/repo.git', branch: 'main'
+                git url: 'https://github.com/akashrajput1131/python_flask.git', branch: 'main'
             }
         }
 
@@ -51,8 +51,8 @@ pipeline {
             steps {
                 sh '''
                     az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing
-                    kubectl apply -f deployment.yaml
-                    kubectl apply -f service.yaml
+                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f k8s/service.yaml
                 '''
             }
         }
