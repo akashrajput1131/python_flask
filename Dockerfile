@@ -1,5 +1,5 @@
 # Use a minimal base image
-FROM python:3.11-alpine
+FROM python:3.9-slim
 
 # Install dependencies needed to build wheels
 RUN apk add --no-cache gcc musl-dev libffi-dev
