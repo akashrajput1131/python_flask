@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: pythonflaskacr11.azurecr.io/python-flask1:1.0
+        image: akash1131/python-flask1:1.0
         ports:
         - containerPort: 5000
         env:
